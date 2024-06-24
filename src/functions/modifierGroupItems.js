@@ -87,3 +87,23 @@ exports.listByItem = async (event) => {
     }
 };
 
+
+exports.delete = async (event) => {
+    try {
+        const { modifier_group_id, item_id } = event.pathParameters;
+        const client = await pool.connect();
+        const result = await client.query('DELETE FROM ModifierGroupItems WHERE modifier_group_id = $1 AND item_id = $2 RETURNING *;', [modifier_group_id, item_id]);
+        client.release();
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify(result.rows[0] || {})
+        };
+    } catch (error) {
+        console.error('Error executing query:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Failed to delete modifier group item' })
+        };
+    }
+};
