@@ -123,3 +123,37 @@ exports.deleteRestaurantTag = async (event) => {
     }
 };
 
+
+exports.getRestaurantTags = async (event) => {
+    try {
+        const { restaurant_id } = event.pathParameters;
+        
+        if (!restaurant_id) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: "Missing required field: restaurant_id must be provided." })
+            };
+        }
+
+        const client = await pool.connect();
+        const queryText = `
+            SELECT t.tag_id, t.name, t.icon
+            FROM Tags t
+            JOIN RestaurantTags rt ON t.tag_id = rt.tag_id
+            WHERE rt.restaurant_id = $1;
+        `;
+        const result = await client.query(queryText, [restaurant_id]);
+        client.release();
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify(result.rows)
+        };
+    } catch (error) {
+        console.error('Error executing query:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Database operation failed' })
+        };
+    }
+};
