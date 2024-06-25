@@ -102,3 +102,24 @@ exports.createRestaurantTag = async (event) => {
     }
 };
 
+
+exports.deleteRestaurantTag = async (event) => {
+    try {
+        const { restaurant_id, tag_id } = event.pathParameters;
+        const client = await pool.connect();
+        const result = await client.query('DELETE FROM RestaurantTags WHERE restaurant_id = $1 AND tag_id = $2 RETURNING *;', [restaurant_id, tag_id]);
+        client.release();
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify(result.rows[0] || {})
+        };
+    } catch (error) {
+        console.error('Error executing query:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Failed to delete restaurant tag link' })
+        };
+    }
+};
+
