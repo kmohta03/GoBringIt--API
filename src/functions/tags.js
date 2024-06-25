@@ -39,3 +39,24 @@ exports.createTag = async (event) => {
         };
     }
 };
+
+
+exports.deleteTag = async (event) => {
+    try {
+        const { id } = event.pathParameters;
+        const client = await pool.connect();
+        const result = await client.query('DELETE FROM Tags WHERE tag_id = $1 RETURNING *;', [id]);
+        client.release();
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify(result.rows[0] || {})
+        };
+    } catch (error) {
+        console.error('Error executing query:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Failed to delete tag' })
+        };
+    }
+};
