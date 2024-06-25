@@ -60,3 +60,45 @@ exports.deleteTag = async (event) => {
         };
     }
 };
+
+
+exports.createRestaurantTag = async (event) => {
+    try {
+        const { restaurant_id, tag_id } = JSON.parse(event.body);
+
+        if (!restaurant_id || !tag_id) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: "Missing required fields: restaurant_id and tag_id must be provided." })
+            };
+        }
+
+        const client = await pool.connect();
+        const queryText = `
+            INSERT INTO RestaurantTags (restaurant_id, tag_id)
+            VALUES ($1, $2)
+            RETURNING *;
+        `;
+        const result = await client.query(queryText, [restaurant_id, tag_id]);
+        client.release();
+
+        if (result.rows.length > 0) {
+            return {
+                statusCode: 201,
+                body: JSON.stringify(result.rows[0])
+            };
+        } else {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: "Failed to create restaurant tag link" })
+            };
+        }
+    } catch (error) {
+        console.error('Error executing query:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Database operation failed' })
+        };
+    }
+};
+
