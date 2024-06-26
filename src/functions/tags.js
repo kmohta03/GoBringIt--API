@@ -157,3 +157,22 @@ exports.getRestaurantTags = async (event) => {
         };
     }
 };
+
+exports.getAllTags = async (event) => {
+    try {
+        const client = await pool.connect();
+        const result = await client.query('SELECT * FROM Tags;');
+        client.release();
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify(result.rows)
+        };
+    } catch (error) {
+        console.error('Error executing query:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Failed to retrieve tags' })
+        };
+    }
+}
