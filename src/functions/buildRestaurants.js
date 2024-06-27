@@ -34,7 +34,7 @@ exports.buildMenus = async () => {
                     'saturdayClose', r.saturdayClose,
                     'sundayOpen', r.sundayOpen,
                     'sundayClose', r.sundayClose
-                )
+                ),
                 'categories', (
                     SELECT json_agg(
                         json_build_object(
@@ -49,8 +49,32 @@ exports.buildMenus = async () => {
                                         'description', i.description,
                                         'price', i.price,
                                         'is_featured', i.is_featured,
-                                        'image', i.image
-                                        // TODO: Add modifier groups
+                                        'image', i.image,
+                                        'modifierGroups', (
+                                            SELECT json_agg(
+                                                json_build_object(
+                                                    'id', mg.modifier_group_id,
+                                                    'name', mg.name,
+                                                    'minNeeded', mg.min_needed,
+                                                    'maxNeeded', mg.max_needed,
+                                                    'modifiers', (
+                                                        SELECT json_agg(
+                                                            json_build_object(
+                                                                'id', mgi.item_id,
+                                                                'name', mi.name,
+                                                                'price', mgi.new_price
+                                                            )
+                                                        )
+                                                        FROM ModifierGroupItems mgi
+                                                        JOIN Items mi ON mgi.item_id = mi.item_id
+                                                        WHERE mgi.modifier_group_id = mg.modifier_group_id
+                                                    )
+                                                )
+                                            )
+                                            FROM ModifierGroups mg
+                                            JOIN ItemModifierGroups img ON mg.modifier_group_id = img.modifier_group_id
+                                            WHERE img.item_id = i.item_id
+                                        )
                                     )
                                 )
                                 FROM Items i
@@ -60,6 +84,30 @@ exports.buildMenus = async () => {
                     )
                     FROM Categories c
                     WHERE c.restaurant_id = r.restaurant_id
+                ),
+                'modifierGroups', (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', mg.modifier_group_id,
+                            'name', mg.name,
+                            'minNeeded', mg.min_needed,
+                            'maxNeeded', mg.max_needed,
+                            'modifiers', (
+                                SELECT json_agg(
+                                    json_build_object(
+                                        'id', mgi.item_id,
+                                        'name', mi.name,
+                                        'price', mgi.new_price
+                                    )
+                                )
+                                FROM ModifierGroupItems mgi
+                                JOIN Items mi ON mgi.item_id = mi.item_id
+                                WHERE mgi.modifier_group_id = mg.modifier_group_id
+                            )
+                        )
+                    )
+                    FROM ModifierGroups mg
+                    WHERE mg.restaurant_id = r.restaurant_id
                 )
             )
         )
