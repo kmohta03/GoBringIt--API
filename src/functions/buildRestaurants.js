@@ -277,8 +277,21 @@ exports.buildClientMenus = async () => {
         const result = await client.query(query);
         client.release();
 
-        return result;
-
+        return result.rows[0].json_agg.map(restaurant => {
+            restaurant.categories = restaurant.categories || [];
+            restaurant.modifierGroups = restaurant.modifierGroups || [];
+            restaurant.categories.forEach(category => {
+                category.items = category.items || [];
+                category.items.forEach(item => {
+                    item.modifierGroups = item.modifierGroups || [];
+                    item.modifierGroups.forEach(modGroup => {
+                        modGroup.modifiers = modGroup.modifiers || [];
+                    });
+                });
+            });
+            return restaurant;
+        });
+        
     } catch (error) {
         console.error('Error executing query:', error);
         throw new Error('Failed to retrieve menu items for client');
