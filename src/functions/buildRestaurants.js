@@ -35,7 +35,32 @@ exports.buildMenus = async () => {
                     'sundayOpen', r.sundayOpen,
                     'sundayClose', r.sundayClose
                 )
-                // TODO: Add categories and items
+                'categories', (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', c.category_id,
+                            'name', c.name,
+                            'display_category', c.display_category,
+                            'items', (
+                                SELECT json_agg(
+                                    json_build_object(
+                                        'id', i.item_id,
+                                        'name', i.name,
+                                        'description', i.description,
+                                        'price', i.price,
+                                        'is_featured', i.is_featured,
+                                        'image', i.image
+                                        // TODO: Add modifier groups
+                                    )
+                                )
+                                FROM Items i
+                                WHERE i.category_id = c.category_id
+                            )
+                        )
+                    )
+                    FROM Categories c
+                    WHERE c.restaurant_id = r.restaurant_id
+                )
             )
         )
         FROM Restaurants r;
