@@ -1,3 +1,10 @@
+// IMPORTANT! DUKE API KEY MUST BE REPLACED YEARLY IN AWS SSM CONSOLE
+
+// AWS SSM Console:
+// https://us-east-1.console.aws.amazon.com/systems-manager/parameters/?region=us-east-1&tab=Table 
+
+// DUKE API KEY (any duke affiliated person can get this):
+// https://streamer.oit.duke.edu/dev_console/api_keys
 
 const axios = require('axios');
 
