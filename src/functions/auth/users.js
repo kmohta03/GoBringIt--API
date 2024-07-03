@@ -42,6 +42,8 @@ exports.create = async (event) => {
 
 // Update other queries in your code similarly
 
+
+
 exports.get = async (event) => {
     try {
         console.log("Received event:", event);
@@ -67,6 +69,63 @@ exports.get = async (event) => {
         return {
             statusCode: 500,
             body: JSON.stringify({ message: 'Internal server error', error: error.toString() })
+        };
+    }
+};
+
+
+
+
+exports.update = async (event) => {
+    try {
+        const netID = event.pathParameters.id;
+        const userData = JSON.parse(event.body);
+
+        // Fetch the current user data to check existence
+        const existingUser = await pool.query('SELECT * FROM Users WHERE netID = $1', [netID]);
+        if (existingUser.rows.length === 0) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: 'User not found' })
+            };
+        }
+
+        // Prepare dynamic SQL query for updating only provided fields
+        let query = 'UPDATE Users SET ';
+        let fieldValues = [];
+        let count = 1;
+
+        Object.keys(userData).forEach(field => {
+            if (field !== 'netID' && userData[field] !== undefined) { // ensure the field is not the identifier and is provided
+                query += `${field} = $${count}, `;
+                fieldValues.push(userData[field]);
+                count++;
+            }
+        });
+
+        if (fieldValues.length === 0) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ message: 'No valid fields provided for update' })
+            };
+        }
+
+        query = query.slice(0, -2); // remove the last comma and space
+        query += ` WHERE netID = $${count}`;
+        fieldValues.push(netID);
+
+        // Execute the update query
+        await pool.query(query, fieldValues);
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: 'User updated successfully' })
+        };
+    } catch (error) {
+        console.error('Error:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: 'Internal server error' })
         };
     }
 };
