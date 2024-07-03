@@ -130,3 +130,25 @@ exports.update = async (event) => {
     }
 };
 
+
+
+exports.delete = async (event) => {
+    try {
+        const netID = event.pathParameters.id;
+
+        // Delete user
+        await pool.query('DELETE FROM Users WHERE netID = $1', [netID]);
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: 'User deleted successfully' })
+        };
+    } catch (error) {
+        console.error('Error:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: 'Internal server error' })
+        };
+    }
+};
+
