@@ -39,3 +39,35 @@ exports.create = async (event) => {
         };
     }
 };
+
+// Update other queries in your code similarly
+
+exports.get = async (event) => {
+    try {
+        console.log("Received event:", event);
+        const netID = event.pathParameters.id;
+        console.log("netID extracted:", netID);
+
+        const user = await pool.query('SELECT * FROM Users WHERE netID = $1', [netID]);
+        console.log("Query executed, user found:", user.rows);
+
+        if (user.rows.length === 0) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: 'User not found' })
+            };
+        }
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify(user.rows[0])
+        };
+    } catch (error) {
+        console.error('Error:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: 'Internal server error', error: error.toString() })
+        };
+    }
+};
+
