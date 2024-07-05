@@ -45,3 +45,53 @@ exports.createPaymentMethod = async (event, context) => {
         };
     }
 };
+
+
+exports.confirmPaymentMethod = async (event, context) => {
+    try {
+        const requestBody = JSON.parse(event.body);
+        const { setupIntentId, customerId } = requestBody;
+
+        // Confirm the Setup Intent on the server side
+        const setupIntent = await stripe.setupIntents.confirm(setupIntentId, {
+            customer: customerId
+        });
+
+        // Attach the payment method to the customer and set as default
+        const paymentMethod = setupIntent.payment_method;
+        await stripe.paymentMethods.attach(paymentMethod, { customer: customerId });
+        await stripe.customers.update(customerId, {
+            invoice_settings: {
+                default_payment_method: paymentMethod
+            }
+        });
+
+        // Detach all other payment methods to ensure only one remains
+        const paymentMethods = await stripe.paymentMethods.list({
+            customer: customerId,
+            type: 'card'
+        });
+
+        const promises = paymentMethods.data
+            .filter(pm => pm.id !== paymentMethod) // Filter out the current default payment method
+            .map(pm => stripe.paymentMethods.detach(pm.id)); // Detach each of the old payment methods
+
+        await Promise.all(promises);
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                message: 'Setup Intent confirmed and payment method updated successfully',
+                setupIntent,
+                customer: customerId
+            })
+        };
+    } catch (error) {
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                error: error.message
+            })
+        };
+    }
+};
