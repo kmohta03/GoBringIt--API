@@ -95,3 +95,48 @@ exports.confirmPaymentMethod = async (event, context) => {
         };
     }
 };
+
+
+exports.listCustomerCards = async (event, context) => {
+    try {
+        const { customerId } = event.pathParameters;
+
+        // Retrieve all payment methods associated with the customer
+        const paymentMethods = await stripe.paymentMethods.list({
+            customer: customerId,
+            type: 'card'
+        });
+
+        if (!paymentMethods.data || paymentMethods.data.length === 0) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({
+                    message: 'No cards found for this customer.'
+                })
+            };
+        }
+
+        // Extract card details for each payment method
+        const cards = paymentMethods.data.map(paymentMethod => ({
+            last4: paymentMethod.card.last4,
+            brand: paymentMethod.card.brand,
+            // Include any other card details you need
+        }));
+
+        // Return the list of cards
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                cards: cards
+            })
+        };
+    } catch (error) {
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                error: error.message
+            })
+        };
+    }
+};
+
