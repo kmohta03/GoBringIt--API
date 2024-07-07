@@ -39,3 +39,36 @@ exports.orderByUser = async (event) => {
     }
 };
 
+
+
+// Check restaurant open
+// gobringitserverless-dev-getRestaurant 
+
+
+exports.create = async (event) => {
+    const authEvent = await authenticateToken(event);
+    console.log("Authentication event:", authEvent);
+    if (authEvent.statusCode === 401) {
+        return authEvent;
+    }
+
+    const userId = event.pathParameters.userId;
+    const { orderData, payWithCard, totalPayment, stripeID, cardLastFour, emailList } = JSON.parse(event.body);
+
+    if (!userId || !orderData) {
+        console.error("Missing user ID or order data");
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ error: 'User ID and order data are required' })
+        };
+    }
+
+    // Invoke addOrderToUser Lambda function asynchronously
+    const lambda = new AWS.Lambda();
+    const params = {
+        FunctionName: 'gobringitserverless-dev-addOrderToUser', // Name of your Lambda function
+        InvocationType: 'Event', // Asynchronous invocation
+        Payload: JSON.stringify({ userId, orderData }) // Data to pass to the function
+    };
+};
+
