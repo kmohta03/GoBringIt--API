@@ -140,3 +140,50 @@ exports.listCustomerCards = async (event, context) => {
     }
 };
 
+
+exports.chargeCustomer = async (event, context) => {
+    try {
+        const requestBody = JSON.parse(event.body);
+        const { customerId, amount, currency = 'usd' } = requestBody;
+
+        // Retrieve the customer to get the default payment method
+        const customer = await stripe.customers.retrieve(customerId);
+        const defaultPaymentMethod = customer.invoice_settings.default_payment_method;
+
+        if (!defaultPaymentMethod) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    message: 'No default payment method available for this customer.'
+                })
+            };
+        }
+
+        // Create a Payment Intent to charge the customer
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amount, // Amount should be in the smallest unit of the currency
+            currency: currency, 
+            customer: customerId,
+            payment_method: defaultPaymentMethod,
+            off_session: true, // Set to true because the customer is not present
+            confirm: true, // Automatically confirm the payment intent
+            error_on_requires_action: true, // Fail if further user action is needed
+        });
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                message: 'Charge successful',
+                paymentIntent
+            })
+        };
+    } catch (error) {
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                error: 'Failed to charge the customer: ' + error.message,
+                errorDetails: error
+            })
+        };
+    }
+};
