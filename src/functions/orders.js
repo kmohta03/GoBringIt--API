@@ -72,3 +72,39 @@ exports.create = async (event) => {
     };
 };
 
+
+
+exports.addOrderToUser = async (event) => {
+    console.log('Event:', event)
+    const { userId, orderData } = event;
+    
+    console.log('Adding order to user:', userId, orderData);
+
+    if (!userId || !orderData) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ error: 'User ID and order data are required' })
+        };
+    }
+
+
+    try {
+        const client = await pool.connect();
+        // Insert the new order data into the orders table
+        const queryText = 'INSERT INTO orders (customer_id, order_data) VALUES ($1, $2) RETURNING *;';
+        const result = await client.query(queryText, [userId, orderData]);
+        client.release();
+
+        return {
+            statusCode: 201,
+            body: JSON.stringify({ message: 'Order created successfully', order: result.rows[0].order_data })
+        };
+    } catch (error) {
+        console.error('Error executing query:', error);
+        if (client) client.release(); // Ensure the client is released in case of an error
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Failed to create order' })
+        };
+    }
+}
