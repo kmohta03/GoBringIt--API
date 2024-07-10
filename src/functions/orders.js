@@ -70,6 +70,49 @@ exports.create = async (event) => {
         InvocationType: 'Event', // Asynchronous invocation
         Payload: JSON.stringify({ userId, orderData }) // Data to pass to the function
     };
+
+    let paymentIntent;
+    console.log(payWithCard, stripeID, cardLastFour, totalPayment, orderData)
+    if (payWithCard) {
+        try {
+            console.log("Attempting to retrieve customer from Stripe:", stripeID);
+            const customer = await stripe.customers.retrieve(stripeID);
+            console.log("Customer retrieved:", customer);
+
+            const paymentMethods = await stripe.paymentMethods.list({
+                customer: stripeID,
+                type: 'card'
+            });
+
+
+            const selectedPaymentMethod = paymentMethods.data.find(pm => pm.card.last4 === cardLastFour);
+            if (!selectedPaymentMethod) {
+                console.error("No matching card found for last four digits:", cardLastFour);
+                throw new Error("No matching card found");
+            }
+
+            const amountInCents = Math.round(totalPayment * 100);
+            console.log("Creating payment intent for amount (in cents):", amountInCents);
+            paymentIntent = await stripe.paymentIntents.create({
+                amount: amountInCents,
+                currency: 'usd',
+                customer: stripeID,
+                payment_method: selectedPaymentMethod.id,
+                confirm: true,
+                automatic_payment_methods: {
+                    enabled: true,
+                    allow_redirects: 'never'
+                }
+            });
+            console.log("Payment intent created:", paymentIntent);
+        } catch (error) {
+            console.error('Error executing payment:', error);
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ error: 'Failed to process payment', details: error.message })
+            };
+        }
+    }
 };
 
 
