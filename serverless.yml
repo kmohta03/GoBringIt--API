@@ -1,0 +1,923 @@
+# Serverless Framework file
+org: ce
+app: gobringitserverless
+service: gobringitserverless
+frameworkVersion: '3'
+plugins:
+  - serverless-prune-plugin
+
+provider:
+  httpApi:
+    cors: true
+  name: aws
+  runtime: nodejs18.x
+  iamRoleStatements:
+  # allows lambdas to call other lambdas
+    - Effect: "Allow"
+      Action:
+        - "lambda:InvokeFunction"
+      Resource: "*"
+  environment:
+      # Update at https://us-east-1.console.aws.amazon.com/systems-manager/parameters/?region=us-east-1&tab=Table 
+      DATABASE_URL: ${ssm:/gobringitserverless/DATABASE_URL}
+      FIREBASE_SERVICE_ACCOUNT: ${ssm:/gobringitserverless/FIREBASE_SERVICE_ACCOUNT}
+      STRIPE_SECRET_KEY: ${ssm:/gobringitserverless/STRIPE_SECRET_KEY}
+      DUKE_API_KEY: ${ssm:/gobringitserverless/DUKE_API_KEY}
+      SENDGRID_API_KEY: ${ssm:/gobringitserverless/SENDGRID_API_KEY}
+
+
+
+
+functions:
+
+# Restaurant Routes ----------------------------------------------
+  listRestaurants:
+    handler: src/functions/restaurants.list
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /restaurants
+          method: get
+
+  getRestaurant:
+    handler: src/functions/restaurants.get
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /restaurants/{id}
+          method: get
+
+
+  createRestaurant:
+    handler: src/functions/restaurants.create
+    timeout: 10
+    # vpc is Virtual Private Cloud - it allows DB to automaticaly connect to lambda
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    memorySize: 200
+    events:
+      - httpApi:
+          path: /restaurants
+          method: post
+    
+
+  updateRestaurant:
+    handler: src/functions/restaurants.update
+    timeout: 10
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    memorySize: 200
+    events:
+      - httpApi:
+          path: /restaurants/{id}
+          method: put
+
+
+  deleteRestaurant:
+    handler: src/functions/restaurants.delete
+    timeout: 10
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    memorySize: 200
+    events:
+      - httpApi:
+          path: /restaurants/{id}
+          method: delete
+
+
+      
+  # Category Routes ----------------------------------------------
+
+  listCategories:
+    handler: src/functions/categories.list
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /categories
+          method: get
+
+
+  listCategoriesByRestaurant:
+    handler: src/functions/categories.listByRestaurant
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /restaurants/{id}/categories
+          method: get
+
+
+  createCategory:
+    handler: src/functions/categories.create
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /categories
+          method: post
+
+  updateCategory:
+    handler: src/functions/categories.update
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /categories/{id}
+          method: put
+
+  deleteCategory:
+    handler: src/functions/categories.delete
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /categories/{id}
+          method: delete
+
+
+  # Item Routes ----------------------------------------------
+
+  createItem:
+    handler: src/functions/items.create
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /items
+          method: post
+
+  listItemsByRestaurant:
+    handler: src/functions/items.listByRestaurant
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /restaurants/{id}/items
+          method: get
+
+  listItemByCategory:
+    handler: src/functions/items.listByCategory
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events: 
+      - httpApi:
+          path: /categories/{id}/items
+          method: get
+  
+  updateItem:
+    handler: src/functions/items.update
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /items/{id}
+          method: put
+
+  deleteItem:
+    handler: src/functions/items.delete
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /items/{id}
+          method: delete
+
+  # Modifier Group Routes ----------------------------------------------
+
+  listModifierGroupsByRestaurant:
+    handler: src/functions/modifierGroups.listByRestaurant
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /restaurants/{id}/modifierGroups
+          method: get
+
+  createModifierGroup:
+    handler: src/functions/modifierGroups.create
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /modifierGroups
+          method: post
+
+  updateModifierGroup:
+    handler: src/functions/modifierGroups.update
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /modifierGroups/{id}
+          method: put
+
+  deleteModifierGroup:
+    handler: src/functions/modifierGroups.delete
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /modifierGroups/{id}
+          method: delete
+
+  # Modifier Group Item Routes -----------------------------------------
+
+  createModifierGroupItem:
+    handler: src/functions/modifierGroupItems.create
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /modifierGroupItems
+          method: post
+
+  listModifierGroupItemsByModifierGroup:
+    handler: src/functions/modifierGroupItems.listByModifierGroup
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /modifierGroups/{id}/modifierGroupItems
+          method: get
+
+  listModifierGroupItemsByItem:
+    handler: src/functions/modifierGroupItems.listByItem
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /items/{id}/modifierGroupItems
+          method: get
+  
+  updateModifierGroupItem:
+    handler: src/functions/modifierGroupItems.update
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /modifierGroupItems
+          method: put
+  
+  deleteModifierGroupItem:
+    handler: src/functions/modifierGroupItems.delete
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /modifierGroupItems/{modifier_group_id}/{item_id}
+          method: delete
+
+
+# Build Resteraunts Routes ---------------
+
+  buildMenus:
+    handler: src/functions/buildRestaurants.buildMenus
+    timeout: 10
+    memorySize: 200
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /buildMenus
+          method: get
+
+  buildClientMenus:
+    handler: src/functions/buildRestaurants.buildClientMenus
+    timeout: 14
+    memorySize: 1000
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /buildClientMenus
+          method: get
+
+# auth routess ----
+
+  dukeBaedNetID:
+    handler: src/functions/auth/dukeBasedNetID.dukeBasedNetID
+    timeout: 10
+    memorySize: 400
+    events:
+      - httpApi:
+          path: /dukeBasedNetID/{netID}
+          method: GET
+
+  checkNetID:
+    handler: src/functions/auth/checkNetID.checkNetID
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /checkNetID/{netID}
+          method: GET
+
+  
+  createUser:
+    handler: src/functions/auth/users.create
+    timeout: 10
+    memorySize: 600
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /createAccount
+          method: POST
+  
+  getUser:
+    handler: src/functions/auth/users.get
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /users/{id}
+          method: GET
+
+  updateUser:
+    handler: src/functions/auth/users.update
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /users/{id}
+          method: PUT
+          
+
+  deleteUser:
+    handler: src/functions/auth/users.delete
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    # events:
+    #   - httpApi:
+    #       path: /users/{id}
+    #       method: DELETE
+
+
+# Order routes
+
+  ordersByUser:
+    handler: src/functions/orders.orderByUser
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /orders/{userId}
+          method: GET
+
+
+# NO VPC, can use the internet
+  createOrder:
+    handler: src/functions/orders.create
+    timeout: 14
+    memorySize: 1000
+    events:
+      - httpApi:
+          path: /orders/{userId}
+          method: POST
+
+
+# NO API ROUTE
+  addOrderToUser:
+    handler: src/functions/orders.addOrderToUser
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+
+
+# Item Modifier Group routes ------ 
+  createAssociation:
+    handler: src/functions/itemModifierGroups.createAssociation
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /itemModifierGroups
+          method: POST
+
+  getAssociation:
+    handler: src/functions/itemModifierGroups.getAssociations
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /itemModifierGroups/{itemId}/{modifierGroupId}
+          method: GET
+    
+  deleteAssociation:
+    handler: src/functions/itemModifierGroups.deleteAssociation
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /itemModifierGroups/{item_id}/{modifier_group_id}
+          method: DELETE
+
+
+
+# Tag routes ------- 
+
+  createTag:
+    handler: src/functions/tags.createTag
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /tags
+          method: POST
+
+  deleteTag:
+    handler: src/functions/tags.deleteTag
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /tags/{id}
+          method: DELETE
+  
+  createRestaurantTag:
+    handler: src/functions/tags.createRestaurantTag
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /restaurantTags
+          method: POST
+  
+  deleteRestaurantTag:
+    handler: src/functions/tags.deleteRestaurantTag
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /restaurantTags/{restaurant_id}/{tag_id}
+          method: DELETE
+
+
+  getRestaurantTags:
+    handler: src/functions/tags.getRestaurantTags
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /restaurantTags/{restaurant_id}
+          method: GET
+
+  getAllTags:
+    handler: src/functions/tags.getAllTags
+    timeout: 10
+    memorySize: 400
+    vpc:
+      securityGroupIds:
+        - sg-0cc55ab8c8044079c
+      subnetIds:
+        - subnet-27990842
+        - subnet-e6cf56cd
+        - subnet-3f441648
+        - subnet-4d374014
+        - subnet-8f4341b5
+        - subnet-5bd26b57
+    events:
+      - httpApi:
+          path: /tags
+          method: GET
+
+
+# # payment routes --------
+
+  createPaymentMethod:
+    handler: src/functions/payments.createPaymentMethod
+    timeout: 10
+    memorySize: 400
+    events:
+      - httpApi:
+          path: /paymentMethods
+          method: POST
+
+  confirmPaymentMethod:
+    handler: src/functions/payments.confirmPaymentMethod
+    timeout: 10
+    memorySize: 400
+    events:
+      - httpApi:
+          path: /paymentMethods
+          method: PUT
+
+  listCustomerCards:
+    handler: src/functions/payments.listCustomerCards
+    timeout: 10
+    memorySize: 400
+    events:
+      - httpApi:
+          path: /paymentMethods/{customerId}
+          method: GET
+
+
+# test routes, don't worry about these i was just messing around----
+  allowInternet:
+    handler: src/functions/test.handler
+    timeout: 10
+    memorySize: 400
+    events:
+      - httpApi:
+          path: /allowInternet
+          method: GET
